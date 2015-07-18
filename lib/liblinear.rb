@@ -2,7 +2,6 @@ $: << File.expand_path(File.join(__FILE__, '..', '..', 'ext'))
 
 require 'liblinearswig'
 require 'liblinear/cross_validator'
-require 'liblinear/error'
 require 'liblinear/model'
 require 'liblinear/parameter'
 require 'liblinear/problem'

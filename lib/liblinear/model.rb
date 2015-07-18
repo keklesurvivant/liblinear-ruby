@@ -4,33 +4,32 @@ module Liblinear
     include Liblinearswig
     attr_accessor :model
 
-    # @param arg_1 [LibLinear::Problem, String]
-    # @param arg_2 [Liblinear::Parameter]
+    # @param arguments[0] [LibLinear::Problem, String]
+    # @param arguments[1] [Liblinear::Parameter]
     # @raise [ArgumentError]
-    # @raise [Liblinear::InvalidParameter]
-    def initialize(arg_1, arg_2 = nil)
-      if arg_2
-        unless arg_1.is_a?(Liblinear::Problem) && arg_2.is_a?(Liblinear::Parameter)
-          raise ArgumentError, 'arguments must be [Liblinear::Problem] and [Liblinear::Parameter]'
-        end
-        error_msg = check_parameter(arg_1.prob, arg_2.param)
-        raise InvalidParameter, error_msg if error_msg
-        @model = train(arg_1.prob, arg_2.param)
+    # @raise [Liblinear::Parameter::InvalidError]
+    def initialize(*arguments)
+      if arguments.size == 1
+        raise ArgumentError, 'argument must be String' if !arguments.first.is_a?(String)
+        @model = load_model(argments.first)
       else
-        raise ArgumentError, 'argument must be [String]' unless arg_1.is_a?(String)
-        @model = load_model(arg_1)
+        problem   = arguments[0]
+        parameter = arguments[1]
+
+        if !problem.is_a?(Liblinear::Problem) || !parameter.is_a?(Liblinear::Parameter)
+          raise ArgumentError, 'arguments must be Liblinear::Problem and Liblinear::Parameter'
+        end
+
+        error_message = check_parameter(problem.to_c, parameter.to_c)
+        raise Liblinear::Parameter::InvalidError, error_message if error_message
+
+        @model = train(problem.to_c, parameter.to_c)
       end
     end
 
     # @return [Integer]
     def class_size
       get_nr_class(@model)
-    end
-
-    # @return [Integer]
-    def nr_class
-      warn "'nr_class' is deprecated. Please use 'class_size' instead."
-      class_size
     end
 
     # @return [Integer]
@@ -78,8 +77,7 @@ module Liblinear
     # @return [Double, Array <Double>]
     def coefficient(feature_index = nil, label_index = 0)
       return get_decfun_coef(@model, feature_index, label_index) if feature_index
-      coefficients = []
-      feature_size.times.map {|feature_index| get_decfun_coef(@model, feature_index + 1, label_index)}
+      feature_size.times.map {|index| get_decfun_coef(@model, index + 1, label_index)}
     end
 
     # @param label_index [Integer]

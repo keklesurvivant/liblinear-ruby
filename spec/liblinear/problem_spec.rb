@@ -8,16 +8,16 @@ describe Liblinear::Problem do
   end
 
   describe '#initialize' do
-    it 'raise ArgumentError when size of labels is different from that of examples' do
-      expect{
+    it 'raise ArgumentError when the size of labels is different from that of examples' do
+      expect {
         Liblinear::Problem.new([1, 2], [[1]])
-      }.to raise_error(ArgumentError, 'labels and examples must be same size')
+      }.to raise_error(ArgumentError, 'the size of labels is different from that of examples')
     end
   end
 
-  describe '#prob' do
-    it 'returns an instance of [Liblinearswig::Problem]' do
-      expect(@problem.prob.class).to eq(Liblinearswig::Problem)
+  describe '#to_c' do
+    it 'returns instance of Liblinearswig::Problem' do
+      expect(@problem.to_c.class).to eq(Liblinearswig::Problem)
     end
   end
 end

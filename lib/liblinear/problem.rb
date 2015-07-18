@@ -2,44 +2,42 @@ module Liblinear
   class Problem
     include Liblinear
     include Liblinearswig
-    attr_accessor :prob
     attr_reader :labels, :examples
 
     # @param labels [Array <Double>]
     # @param examples [Array <Double, Hash>]
     # @param bias [Double]
-    # @raise [ArgumentError]
+    # @raose [ArgumentError]
     def initialize(labels, examples, bias = -1)
-      unless labels.size == examples.size
-        raise ArgumentError, 'labels and examples must be same size'
+      if labels.size != examples.size
+        raise ArgumentError, 'the size of labels is different from that of examples'
       end
-      @prob = Liblinearswig::Problem.new
+
+      @problem = Liblinearswig::Problem.new
       @labels = labels
-      c_labels = new_double_array(@labels)
       @examples = examples
-      @bias = bias
-      @max_example_index = max_index(@examples)
-      @example_matrix = feature_node_matrix(examples.size)
-      @c_example_array = []
 
-      set_example_matrix
+      @problem.y = new_double_array(labels)
+      @problem.bias = bias
+      @problem.l = examples.size
 
-      @prob.tap do |p|
-        p.y = c_labels
-        p.x = @example_matrix
-        p.bias = bias
-        p.l = examples.size
-        p.n = @max_example_index
-        p.n += 1 if bias >= 0
+      example_matrix = feature_node_matrix(examples.size)
+      examples.size.times do |index|
+        feature_node_matrix_set(
+          example_matrix,
+          index,
+          convert_to_feature_node_array(examples[index], max_index(examples), bias)
+        )
       end
+
+      @problem.x = example_matrix
+      @problem.n = max_index(examples)
+      @problem.n += 1 if bias >= 0
     end
 
-    def set_example_matrix
-      @examples.size.times do |index|
-        c_example = convert_to_feature_node_array(@examples[index], @max_example_index, @bias)
-        @c_example_array << c_example
-        feature_node_matrix_set(@example_matrix, index, c_example)
-      end
+    # @return [Liblinearswig::Problem]
+    def to_c
+      @problem
     end
   end
 end

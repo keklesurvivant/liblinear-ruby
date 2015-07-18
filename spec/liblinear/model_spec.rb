@@ -3,33 +3,29 @@ require 'liblinear'
 
 describe Liblinear::Model do
   before do
-    @prob = Liblinear::Problem.new([1, 2], [[1],[2]])
-    @param_1 = Liblinear::Parameter.new
-    @model_classification = Liblinear::Model.new(@prob, @param_1)
-
-    @param_2 = Liblinear::Parameter.new({ solver_type: Liblinear::L2R_L2LOSS_SVR })
-    @model_regression = Liblinear::Model.new(@prob, @param_2)
+    @problem = Liblinear::Problem.new([1, 2], [[1],[2]])
+    @model_classification = Liblinear::Model.new(@problem, Liblinear::Parameter.new)
+    @model_regression     = Liblinear::Model.new(@problem, Liblinear::Parameter.new({ solver_type: Liblinear::L2R_L2LOSS_SVR }))
   end
 
   describe '#initialize' do
-    it 'raise ArgumentError when arg_1 not equal [Liblinear::Problem] or arg_2 not equal [Liblinear::Parameter]' do
-      expect{
+    it 'raise ArgumentError when argument1 not equal Liblinear::Problem or argument2 not equal Liblinear::Parameter' do
+      expect {
         Liblinear::Model.new(1, 2)
-      }.to raise_error(ArgumentError, 'arguments must be [Liblinear::Problem] and [Liblinear::Parameter]')
+      }.to raise_error(ArgumentError, 'arguments must be Liblinear::Problem and Liblinear::Parameter')
     end
 
     it 'raise Liblinear::InvalidParameter when parameter is invalid' do
-      param = Liblinear::Parameter.new
-      param.C = -1
-      expect{
-        Liblinear::Model.new(@prob, param)
-      }.to raise_error(Liblinear::InvalidParameter, 'C <= 0')
+      parameter = Liblinear::Parameter.new({ cost: -1 })
+      expect {
+        Liblinear::Model.new(@problem, parameter)
+      }.to raise_error(Liblinear::Parameter::InvalidError, 'C <= 0')
     end
 
-    it 'raise ArgumentError when argument is not [String]' do
-      expect{
+    it 'raise ArgumentError when argument is not String' do
+      expect {
         Liblinear::Model.new(1)
-      }.to raise_error(ArgumentError, 'argument must be [String]')
+      }.to raise_error(ArgumentError, 'argument must be String')
     end
   end
 
@@ -95,7 +91,7 @@ describe Liblinear::Model do
     end
 
     it 'returns false' do
-      expect(@model_classification.regression_model?).to eq (false)
+      expect(@model_classification.regression_model?).to eq(false)
     end
   end
 end
